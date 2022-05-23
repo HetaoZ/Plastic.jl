@@ -88,6 +88,7 @@ const NewmarkSolver = DynamicSolver(0.52, 0.25*(0.5 + 0.52)^2) # δ = 0.52, α =
 const ExplicitSolver = DynamicSolver(0.5, 0.0)
 
 mutable struct PlasticSystem
+    # 能否把矢量也写成稀疏形式？
     d::Vector{Float64}
     Δd::Vector{Float64}
     u::Vector{Float64}
@@ -131,9 +132,11 @@ mutable struct PlasticStructure
     load::Vector{Float64}
     parameters::Dict
     solver::AbstractSolver
+    movable::Bool
+    # constrained_dofs::Vector{Int}
 end
 
-function PlasticStructure(material, grid, interpolation, qr, face_qr, dim::Int)
+function PlasticStructure(material::AbstractPlasticity, grid::Grid, interpolation, qr, face_qr, dim::Int)
 
     dh, cellvalues, facevalues = create_grid_handlers(grid, interpolation, qr, face_qr, dim) 
     
@@ -162,11 +165,11 @@ function PlasticStructure(material, grid, interpolation, qr, face_qr, dim::Int)
         "damping"=>false
     )
     
-    return PlasticStructure(material, grid, dh, dbcs, cellvalues, facevalues, states, system, load, parameters, NewmarkSolver)
+    return PlasticStructure(material, grid, dh, dbcs, cellvalues, facevalues, states, system, load, parameters, NewmarkSolver, true)
 end
 
 # PlasticStructure(material, grid, interpolation, qr, face_qr) = PlasticStructure(material, grid, interpolation, qr, face_qr, interpolation)
 
 function Base.copy(s::PlasticStructure)
-        
+
 end

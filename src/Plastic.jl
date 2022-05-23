@@ -2,6 +2,8 @@ module Plastic
 using Reexport, Printf
 
 # 调用者一定也会用到这些包
+# include("src_of_Ferrite/Ferrite.jl")
+# @reexport using .Ferrite
 @reexport using Ferrite
 using Tensors
 @reexport using WriteVTK
@@ -47,5 +49,6 @@ include("creater.jl")
 include("solver.jl")
 include("fetchers.jl")
 include("postprocess_vtk.jl")
+include("preprocess.jl")
 
 end

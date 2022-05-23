@@ -1,7 +1,7 @@
 
-advance!(s::PlasticStructure) = static_solver!(s, s.solver)
+advance!(s::PlasticStructure) = s.movable ? static_solver!(s, s.solver) : 0
 
-advance!(s::PlasticStructure, dt::Real) = dynamic_solver!(s, dt, s.solver)
+advance!(s::PlasticStructure, dt::Real) = s.movable ? dynamic_solver!(s, dt, s.solver) : 0
 
 "非线性静力学方程需要多次迭代求解，相当于在无穷小的时间内完成一个驰豫过程。"
 function static_solver!(s::PlasticStructure, static_solver::StaticSolver)
@@ -44,7 +44,7 @@ end
 "动力学方程的求解是在有限时间步内的瞬态非平衡解，不需要多次迭代来模拟驰豫过程，因为本来就是非平衡的。"
 function dynamic_solver!(s::PlasticStructure, dt::Real, dynamic_solver::DynamicSolver)
     
-    apply!(s.system.d, s.dbcs)
+    apply_zero!(s.system.d, s.dbcs)
     doassemble_dynamic!(s)
     apply_zero!(s.system.K, s.system.Q, s.dbcs)
     core_solver!(s, dt, dynamic_solver.δ, dynamic_solver.α)

@@ -96,6 +96,7 @@ function assemble_cell!(Ke, Qe, cell, cellvalues, facevalues, grid, material, de
 
     # 搞清楚这里怎么施加结点力
     Qe -= load
+
     return Ke, Qe
 end
 

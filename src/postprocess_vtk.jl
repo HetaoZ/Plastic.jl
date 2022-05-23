@@ -6,7 +6,7 @@ const VTK_CELL_TYPE = Dict(
     "Hex8"=>VTKCellTypes.VTK_HEXAHEDRON
     )
 
-function create_vtkfile(s::PlasticStructure, fname)
+function create_vtkfile(s::PlasticStructure, fname::String)
     points, cells = pts_cells(s)
     f = vtk_grid(fname, points, cells)
     return f
@@ -28,7 +28,7 @@ function pts_cells(s::PlasticStructure)
     return pts, cells
 end
 
-function save_to_vtk(s, datanames, fields, fname)
+function save_to_vtk(s::PlasticStructure, datanames::T where T<:Tuple, fields::T where T<:Tuple, fname::String)
     vtkfile = create_vtkfile(s, fname)
     for i in eachindex(datanames)
         vtkfile[datanames[i]] = fetch_data(s, fields[i])
