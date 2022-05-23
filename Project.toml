@@ -3,18 +3,19 @@ uuid = "f15eb811-b548-429a-94ae-9f0f3eaae373"
 authors = ["iamzhtr@hotmail.com"]
 version = "0.1.0"
 
-[compat]
-julia = "1.6.1"
-
 [deps]
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
-Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Ferrite = "c061ca5d-56c9-439f-9c0e-210fe06d3992"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PointInPoly = "b33f1834-3304-4c26-96eb-60ff7015163d"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Tensors = "48a634ad-e948-5137-8d70-aa71f2a747f4"
 WriteVTK = "64499a7a-5c06-52f2-abe2-ccb03c286192"
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-SparseArrays =  "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-PointInPoly = "b33f1834-3304-4c26-96eb-60ff7015163d"
+
+[compat]
+WriteVTK = "1"
+julia = "1.6.1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
