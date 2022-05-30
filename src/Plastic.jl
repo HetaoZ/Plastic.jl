@@ -9,6 +9,7 @@ using Tensors
 @reexport using WriteVTK
 
 getdim = Ferrite.getdim
+curl = Ferrite.curl # deal with its warning
 
 # 调用者不一定会用到这些包
 using LinearAlgebra

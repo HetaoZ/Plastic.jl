@@ -2,9 +2,25 @@ abstract type AbstractBoundary end
 
 struct BoundaryPoly{N,M,dim} <: AbstractBoundary
     x::NTuple{dim, NTuple{N, Float64}}
-    faces::NTuple{M,NTuple{3,Int}} 
+    faces::NTuple{M,NTuple{dim,Int}} 
     # 只需要判定探针位于当前cell内外即可，因为已知这些faces均为表面face，所以探针位于当前cell外是探针位于表面外的充分必要条件。
     normals::NTuple{M,Vec}
+end
+
+@inline function getnode(bp::BoundaryPoly, i::Int)
+    return [coord[i] for coord in bp.x]
+end
+
+@inline function getface(bp::BoundaryPoly, i::Int)
+    return bp.faces[i]
+end
+
+@inline function getfacenode(bp::BoundaryPoly, i::Int)
+    return getfacenode(bp, bp.faces[i])
+end
+
+@inline function getfacenode(bp::BoundaryPoly, face::Tuple)
+    return ntuple(k->getnode(bp, face[k]), length(face))
 end
 
 abstract type AbstractPlasticity end
