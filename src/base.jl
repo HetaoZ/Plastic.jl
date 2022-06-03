@@ -1,26 +1,31 @@
+struct BoundaryNode{dim}
+    id::Int
+    x::Vector{Float64}
+    u::Vector{Float64}
+end
+
+struct BoundaryFace{dim}
+    nodes::NTuple{dim,BoundaryNode}
+end
+
 abstract type AbstractBoundary end
 
+"boundary polygon/polyhedron of N nodes, M faces, dim dimension"
 struct BoundaryPoly{N,M,dim} <: AbstractBoundary
-    x::NTuple{dim, NTuple{N, Float64}}
-    faces::NTuple{M,NTuple{dim,Int}} 
+    x::NTuple{dim, NTuple{N,Float64}}
+    u::NTuple{dim, NTuple{N,Float64}}
+    faces::NTuple{M, NTuple{dim,Int}} 
     # 只需要判定探针位于当前cell内外即可，因为已知这些faces均为表面face，所以探针位于当前cell外是探针位于表面外的充分必要条件。
-    normals::NTuple{M,Vec}
+    normals::NTuple{M, Vec}
 end
 
 @inline function getnode(bp::BoundaryPoly, i::Int)
-    return [coord[i] for coord in bp.x]
+    return BoundaryNode(i, [coord[i] for coord in bp.x], [speed[i] for speed in bp.u])
 end
 
-@inline function getface(bp::BoundaryPoly, i::Int)
-    return bp.faces[i]
-end
-
-@inline function getfacenode(bp::BoundaryPoly, i::Int)
-    return getfacenode(bp, bp.faces[i])
-end
-
-@inline function getfacenode(bp::BoundaryPoly, face::Tuple)
-    return ntuple(k->getnode(bp, face[k]), length(face))
+@inline function getface(bp::BoundaryPoly{N,M,dim} where N where M where dim, i::Int)
+    faceids = bp.faces[i]
+    return BoundaryFace(ntuple(k -> getnode(bp, faceids[k]), dim))
 end
 
 abstract type AbstractPlasticity end

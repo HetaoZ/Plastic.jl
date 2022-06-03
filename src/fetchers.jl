@@ -1,6 +1,18 @@
 
+function fetch_node_coordinate(s::PlasticStructure, i::Int, axis::Int)
+    return s.grid.nodes[i].x[axis] + s.system.d[getdim(s.grid)*(i-1)+axis]
+end
+
 function fetch_coordinates(s::PlasticStructure)
-    return ntuple(i->Tuple(map(node->node.x[i], s.grid.nodes)), getdim(s.grid))
+    return ntuple(axis->ntuple(i->fetch_node_coordinate(s, i, axis), length(s.grid.nodes)), getdim(s.grid))
+end
+
+function fetch_node_speed(s::PlasticStructure, i::Int, axis::Int)
+    return s.system.u[getdim(s.grid)*(i-1)+axis]
+end
+
+function fetch_speeds(s::PlasticStructure)
+    return ntuple(axis->ntuple(i->fetch_node_speed(s, i, axis), length(s.grid.nodes)), getdim(s.grid))
 end
 
 function fetch_poly_x(s::PlasticStructure, dim::Int)
@@ -28,8 +40,9 @@ function fetch_poly(s::PlasticStructure)
     normals = ntuple(i -> insides[i] ? -normals[i] : normals[i], M)
 
     x = fetch_coordinates(s)
+    u = fetch_speeds(s)
 
-    return BoundaryPoly{N,M,dim}(x, boundary_faces, normals)
+    return BoundaryPoly{N,M,dim}(x, u, boundary_faces, normals)
 end
 
 function vec2tuple(v)
