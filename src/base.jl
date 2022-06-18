@@ -8,10 +8,8 @@ struct BoundaryFace{dim}
     nodes::NTuple{dim,BoundaryNode}
 end
 
-abstract type AbstractBoundary end
-
-"boundary polygon/polyhedron of N nodes, M faces, dim dimension"
-struct BoundaryPoly{N,M,dim} <: AbstractBoundary
+"boundary polygon/polyhedron surface of N nodes, M faces, dim dimension"
+struct Surface{N,M,dim}
     x::NTuple{dim, NTuple{N,Float64}}
     u::NTuple{dim, NTuple{N,Float64}}
     faces::NTuple{M, NTuple{dim,Int}} 

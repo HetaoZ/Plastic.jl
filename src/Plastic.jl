@@ -30,7 +30,7 @@ export
     generate_grid,
     add_bc!,
     advance!,
-    fetch_poly,
+    fetch_surface,
     fetch_data,
     save_to_vtk,
     time_step!
