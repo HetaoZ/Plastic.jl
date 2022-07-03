@@ -31,7 +31,7 @@ function fetch_surface(s::PlasticStructure)
     # 计算outer_normals
     I, J, V = findnz(s.grid.boundary_matrix)
     faces_x = map(face -> map(i -> s.grid.nodes[i].x, face), boundary_faces)
-    normals = map(face_x -> get_normal(face_x), faces_x)
+    normals = map(face_x -> Vector(get_normal(face_x)), faces_x)
     centers = map(face_x -> get_center(face_x), faces_x)
 
     sensors = ntuple(i -> centers[i] + normals[i] * 1.e-10, M)

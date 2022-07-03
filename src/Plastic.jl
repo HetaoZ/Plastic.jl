@@ -21,7 +21,7 @@ export
     J2Plasticity,
     vonMises,
     PlasticStructure,
-    BoundaryPoly,
+    Surface,
     NewtonRaphsonSolver,
     NewmarkSolver,
     ExplicitSolver
