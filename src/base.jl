@@ -68,7 +68,7 @@ function J2Plasticity(E, ν, σ₀, H, ρ₀)
     return J2Plasticity(G, K, σ₀, H, Dᵉ, ρ₀)
 end
 
-mutable struct MaterialState{T, S <: SecondOrderTensor{3, T}}
+mutable struct MaterialState{T, S}
     # Store "converged" values
     ϵᵖ::S # plastic strain
     σ::S # stress
@@ -83,13 +83,13 @@ mutable struct MaterialState{T, S <: SecondOrderTensor{3, T}}
     ρ::T
 end
 
-function MaterialState()
+function MaterialState(dim)
     return MaterialState(
-                zero(SymmetricTensor{2, 3}),
-                zero(SymmetricTensor{2, 3}),
+                zero(SymmetricTensor{2, dim}),
+                zero(SymmetricTensor{2, dim}),
                 0.0,
-                zero(SymmetricTensor{2, 3}),
-                zero(SymmetricTensor{2, 3}),
+                zero(SymmetricTensor{2, dim}),
+                zero(SymmetricTensor{2, dim}),
                 0.0,
                 0.0,
                 0.0)
@@ -183,7 +183,7 @@ function PlasticStructure(material::AbstractPlasticity, grid::Grid, interpolatio
     dbcs = ConstraintHandler(dh)
 
     nqp = getnquadpoints(cellvalues)
-    states = [[MaterialState() for _ in 1:nqp] for _ in 1:getncells(grid)]
+    states = [[MaterialState(dim) for _ in 1:nqp] for _ in 1:getncells(grid)]
 
     system = PlasticSystem(dh)
 
