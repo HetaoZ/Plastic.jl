@@ -10,7 +10,22 @@ end
 struct SurfaceFace{dim}
     id::Int
     nodes::NTuple{dim,SurfaceNode}
-    normal::Vector
+    normal::Vector{Float64}
+end
+
+function getarea(face::SurfaceFace{1})
+    return 1.0
+end
+
+function getarea(face::SurfaceFace{2})
+    return norm(face.nodes[1].x - face.nodes[2].x)
+end
+
+function getarea(face::SurfaceFace{3})
+    A, B, C = face.nodes[1].x, face.nodes[2].x, face.nodes[3].x
+    a, b, c = norm(A - B), norm(B - C), norm(C - A)
+    p = (a+b+c)/2
+    return sqrt(p*(p-a)*(p-b)*(p-c))
 end
 
 "boundary polygon/polyhedron surface of N nodes, M faces, dim dimension"
@@ -19,7 +34,7 @@ struct Surface{N,M,dim}
     u::NTuple{dim, NTuple{N,Float64}}
     faces::NTuple{M, NTuple{dim,Int}} 
     # 只需要判定探针位于当前cell内外即可，因为已知这些faces均为表面face，所以探针位于当前cell外是探针位于表面外的充分必要条件。
-    normals::NTuple{M, Vector}
+    normals::NTuple{M, Vector{Float64}}
 end
 
 @inline function getnode(surface::Surface, i::Int)
@@ -145,6 +160,7 @@ function PlasticSystem(dh::DofHandler)
 end
 
 mutable struct PlasticStructure
+    dim::Int
     material::AbstractPlasticity
     grid::Grid
     dh::DofHandler
@@ -189,11 +205,11 @@ function PlasticStructure(material::AbstractPlasticity, grid::Grid, interpolatio
         "damping"=>false
     )
     
-    return PlasticStructure(material, grid, dh, dbcs, cellvalues, facevalues, states, system, load, parameters, NewmarkSolver, true)
+    return PlasticStructure(dim, material, grid, dh, dbcs, cellvalues, facevalues, states, system, load, parameters, NewmarkSolver, true)
 end
 
 # PlasticStructure(material, grid, interpolation, qr, face_qr) = PlasticStructure(material, grid, interpolation, qr, face_qr, interpolation)
 
-function Base.copy(s::PlasticStructure)
+# function Base.copy(s::PlasticStructure)
 
-end
+# end

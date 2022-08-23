@@ -1,4 +1,4 @@
-function compute_stress_tangent(ϵ::SymmetricTensor{2,3}, material::J2Plasticity, state::MaterialState)
+function compute_stress_tangent(ϵ::SymmetricTensor, material::J2Plasticity, state::MaterialState)
     # unpack some material parameters
     G = material.G
     K = material.K

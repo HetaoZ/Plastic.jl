@@ -2,20 +2,21 @@ module Plastic
 using Reexport, Printf
 
 # 调用者一定也会用到这些包
-# include("src_of_Ferrite/Ferrite.jl")
-# @reexport using .Ferrite
 @reexport using Ferrite
 using Tensors
 @reexport using WriteVTK
 
 getdim = Ferrite.getdim
+getcelltype = Ferrite.getcelltype
+getfaces = Ferrite.faces
+getvertices = Ferrite.vertices
+getedges = Ferrite.edges
 curl = Ferrite.curl # deal with its warning
 
 # 调用者不一定会用到这些包
 using LinearAlgebra
 using SparseArrays
-
-import PointInPoly: pinpoly
+using PointInPoly
 
 export  
     J2Plasticity,
@@ -27,7 +28,7 @@ export
     ExplicitSolver
     
 export
-    generate_grid,
+    create_grid,
     add_bc!,
     advance!,
     fetch_surface,
