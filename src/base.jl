@@ -9,7 +9,7 @@ end
 
 struct SurfaceFace{dim}
     id::Int
-    nodes::NTuple{dim,SurfaceNode}
+    nodes
     normal::Vector{Float64}
 end
 
@@ -30,25 +30,26 @@ end
 
 "boundary polygon/polyhedron surface of N nodes, M faces, dim dimension"
 struct Surface{N,M,dim}
-    x::NTuple{dim, NTuple{N,Float64}}
-    u::NTuple{dim, NTuple{N,Float64}}
-    faces::NTuple{M, NTuple{dim,Int}} 
+    x::NTuple{dim, Tuple}
+    u::NTuple{dim, Tuple}
+    # mapping::NTuple{N,Int}  # 第 i 个全局结点映射到第 mapping(i) 个Surface结点
+    faces::NTuple{M, Tuple} 
     # 只需要判定探针位于当前cell内外即可，因为已知这些faces均为表面face，所以探针位于当前cell外是探针位于表面外的充分必要条件。
     normals::NTuple{M, Vector{Float64}}
 end
 
-@inline function getnode(surface::Surface, i::Int)
+@inline function getnode(surface::Surface{N,M,dim}, i::Int) where {N,M,dim}
     return SurfaceNode(i, [coord[i] for coord in surface.x], [speed[i] for speed in surface.u])
 end
 
 @inline function getface(surface::Surface{N,M,dim}, i::Int) where N where M where dim
     faceids = surface.faces[i]
-    return SurfaceFace(i, ntuple(k -> getnode(surface, faceids[k]), dim), Vector(surface.normals[i]))
+    return SurfaceFace{dim}(i, ntuple(k -> getnode(surface, faceids[k]), length(faceids)), Vector(surface.normals[i]))
 end
 
 abstract type AbstractPlasticity end
 
-struct J2Plasticity{T, S <: SymmetricTensor{4, 3, T}} <: AbstractPlasticity
+struct J2Plasticity{dim, T, S} <: AbstractPlasticity
     G::T  # Shear modulus
     K::T  # Bulk modulus
     σ₀::T # Initial yield limit
@@ -57,15 +58,15 @@ struct J2Plasticity{T, S <: SymmetricTensor{4, 3, T}} <: AbstractPlasticity
     ρ₀::T # Initial density
 end
 
-function J2Plasticity(E, ν, σ₀, H, ρ₀)
+function J2Plasticity(dim, E, ν, σ₀, H, ρ₀)
     δ(i,j) = i == j ? 1.0 : 0.0 # helper function
     G = E / 2(1 + ν)
     K = E / 3(1 - 2ν)
 
     Isymdev(i,j,k,l) = 0.5*(δ(i,k)*δ(j,l) + δ(i,l)*δ(j,k)) - 1.0/3.0*δ(i,j)*δ(k,l)
     temp(i,j,k,l) = 2.0G *( 0.5*(δ(i,k)*δ(j,l) + δ(i,l)*δ(j,k)) + ν/(1.0-2.0ν)*δ(i,j)*δ(k,l))
-    Dᵉ = SymmetricTensor{4, 3}(temp)
-    return J2Plasticity(G, K, σ₀, H, Dᵉ, ρ₀)
+    Dᵉ = SymmetricTensor{4, dim}(temp)
+    return J2Plasticity{dim, Float64,  SymmetricTensor{4, dim}}(G, K, σ₀, H, Dᵉ, ρ₀)
 end
 
 mutable struct MaterialState{T, S}

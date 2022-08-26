@@ -1,9 +1,9 @@
 
 const VTK_CELL_TYPE = Dict(
-    "Tri3"=>VTKCellTypes.VTK_TRIANGLE, 
-    "Quad4"=>VTKCellTypes.VTK_QUAD,
-    "Tetra4"=>VTKCellTypes.VTK_TETRA,
-    "Hex8"=>VTKCellTypes.VTK_HEXAHEDRON
+    Triangle=>VTKCellTypes.VTK_TRIANGLE, 
+    Quadrilateral=>VTKCellTypes.VTK_QUAD,
+    Tetrahedron=>VTKCellTypes.VTK_TETRA,
+    Hexahedron=>VTKCellTypes.VTK_HEXAHEDRON
     )
 
 function create_vtkfile(s::PlasticStructure, fname::String)
@@ -23,7 +23,7 @@ function pts_cells(s::PlasticStructure)
             # 这里的x相当于x0，因为Ferrite不更新node.x
             pts[:, e.nodes[k]] = node.x
         end
-        cells[eid] = MeshCell(VTK_CELL_TYPE["Tetra4"], [e.nodes[i] for i=1:length(e.nodes)])
+        cells[eid] = MeshCell(VTK_CELL_TYPE[typeof(e)], [e.nodes[i] for i=1:length(e.nodes)])
     end
     return pts, cells
 end

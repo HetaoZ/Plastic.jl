@@ -42,23 +42,19 @@ function fetch_surface(s::PlasticStructure)
     N = length(unique(hcat(collect.(boundary_faces)...)))
     M = length(boundary_faces)
     dim = getdim(s.grid)
+
+    x = fetch_coordinates(s)
+    u = fetch_speeds(s)
+    
     # 计算outer_normals
     I, J, V = findnz(s.grid.boundary_matrix)
     faces_x = map(face -> map(i -> s.grid.nodes[i].x+s.system.d[dim*(i-1)+1:dim*(i-1)+dim], face), boundary_faces)
     normals = map(face_x -> Vector(get_normal(face_x)), faces_x)
     centers = map(face_x -> get_center(face_x), faces_x)
 
-    # println("node = ", s.grid.nodes[1])
-    # println("normals = ", normals[1])
-    # println()
-
     sensors = ntuple(i -> centers[i] + normals[i] * 1.e-10, M)
-    cells_x = ntuple(i -> map(node_id -> s.grid.nodes[node_id].x, s.grid.cells[J[i]].nodes), M)
-    insides = ntuple(i -> pinpoly(eltype(s.grid.cells), getfaces(s.grid.cells[J[i]]), cells_x[i], sensors[i]), M)
+    insides = ntuple(i -> pinpoly(eltype(s.grid.cells), getfaces(s.grid.cells[J[i]]), x, sensors[i]), M)
     normals = ntuple(i -> insides[i] ? -normals[i] : normals[i], M)
-
-    x = fetch_coordinates(s, boundary_faces)
-    u = fetch_speeds(s, boundary_faces)
 
     return Surface{N,M,dim}(x, u, boundary_faces, normals)
 end
@@ -77,24 +73,16 @@ function cross_product(a, b)
     end
 end
 
-function pinpoly(::Type{Tetrahedron}, faces, cell_x, sensor)
-    x = ntuple(i -> cell_x[i][1], 4)
-    y = ntuple(i -> cell_x[i][2], 4)
-    z = ntuple(i -> cell_x[i][3], 4)
-    return PointInPoly.pinpoly(x, y, z, faces, Tuple(sensor)) == 1
+function pinpoly(::Type{Tetrahedron}, faces, x, sensor)
+    return PointInPoly.pinpoly(x..., faces, Tuple(sensor)) == 1
 end
 
-function pinpoly(::Type{Hexahedron}, faces, cell_x, sensor)
-    x = ntuple(i -> cell_x[i][1], 8)
-    y = ntuple(i -> cell_x[i][2], 8)
-    z = ntuple(i -> cell_x[i][3], 8)
-    return PointInPoly.pinpoly(x, y, z, faces, Tuple(sensor)) == 1
+function pinpoly(::Type{Hexahedron}, faces, x, sensor)
+    return PointInPoly.pinpoly(x..., faces, Tuple(sensor)) == 1
 end
 
-function pinpoly(::Type{Quadrilateral}, faces, cell_x, sensor)
-    x = ntuple(i -> cell_x[i][1], 4)
-    y = ntuple(i -> cell_x[i][2], 4)
-    return PointInPoly.pinpoly(x, y, Tuple(sensor)) == 1
+function pinpoly(::Type{Quadrilateral}, faces, x, sensor)
+    return PointInPoly.pinpoly(x..., faces, Tuple(sensor)) == 1
 end
 
 function get_center(x)
