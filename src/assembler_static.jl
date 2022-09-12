@@ -1,3 +1,9 @@
+function compute_stress_tangent(ϵ::SymmetricTensor, material::Elasticity, state::MaterialState)
+    # elastic loading
+    state.temp_σ = material.Dᵉ ⊡ ϵ
+    return state.temp_σ, material.Dᵉ
+end
+
 function compute_stress_tangent(ϵ::SymmetricTensor, material::J2Plasticity, state::MaterialState)
     # unpack some material parameters
     G = material.G
@@ -45,8 +51,8 @@ function compute_stress_tangent(ϵ::SymmetricTensor, material::J2Plasticity, sta
     end
 end
 
-function doassemble_static!(cellvalues::CellVectorValues{dim},
-    facevalues::FaceVectorValues{dim}, K::SparseMatrixCSC, grid::Grid, dh::DofHandler, material::J2Plasticity, d, states, load) where {dim}
+function doassemble_KQ!(cellvalues::CellVectorValues{dim}, facevalues::FaceVectorValues{dim}, K::SparseMatrixCSC, grid::Grid, dh::DofHandler, material::AbstractMaterial, d, states, load) where {dim}
+
     Q = zeros(ndofs(dh))
     assembler = start_assemble(K, Q)
     # println("-- doassemble: 1--")
@@ -59,6 +65,7 @@ function doassemble_static!(cellvalues::CellVectorValues{dim},
         fill!(Ke, 0)
         fill!(Qe, 0)
         eldofs = celldofs(cell)
+        println("eldofs = ", eldofs)
         de = d[eldofs]
         Ke, Qe = assemble_cell!(Ke, Qe, cell, cellvalues, facevalues, grid, material, de, state, load[eldofs])
         assemble!(assembler, eldofs, Qe, Ke)
@@ -68,7 +75,7 @@ function doassemble_static!(cellvalues::CellVectorValues{dim},
 end
 
 function doassemble_static!(s::PlasticStructure)
-    s.system.K, s.system.Q = doassemble_static!(s.cellvalues, s.facevalues, s.system.K, s.grid, s.dh, s.material, s.system.d, s.states, s.load)
+    s.system.K, s.system.Q = doassemble_KQ!(s.cellvalues, s.facevalues, s.system.K, s.grid, s.dh, s.material, s.system.d, s.states, s.load)
 end
 
 function assemble_cell!(Ke, Qe, cell, cellvalues, facevalues, grid, material, de, state, load)
@@ -95,9 +102,16 @@ function assemble_cell!(Ke, Qe, cell, cellvalues, facevalues, grid, material, de
     symmetrize_lower!(Ke)
 
     # 搞清楚这里怎么施加结点力
-    Qe -= load
+    # println("cell = ")
+    # dump(cell)
 
+    Qe -= load
+    println("Qe = ", Qe)
     return Ke, Qe
+end
+
+function global_load_to_cell_load(load, nodes, dim)
+    nodes
 end
 
 function symmetrize_lower!(K)

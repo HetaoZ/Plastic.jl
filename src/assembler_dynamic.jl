@@ -1,24 +1,24 @@
-function doassemble_K!(cellvalues::CellVectorValues{dim},
-    facevalues::FaceVectorValues{dim}, K::SparseMatrixCSC, grid::Grid, dh::DofHandler, material::J2Plasticity, d, states, load) where {dim}
+# function doassemble_K!(cellvalues::CellVectorValues{dim},
+#     facevalues::FaceVectorValues{dim}, K::SparseMatrixCSC, grid::Grid, dh::DofHandler, material::AbstractMaterial, d, states, load) where {dim}
 
-    Q = zeros(ndofs(dh))
-    assembler = start_assemble(K, Q)
+#     Q = zeros(ndofs(dh))
+#     assembler = start_assemble(K, Q)
 
-    nu = getnbasefunctions(cellvalues)
-    Qe = zeros(nu)     # element residual vector
-    Ke = zeros(nu, nu) # element tangent matrix
+#     nu = getnbasefunctions(cellvalues)
+#     Qe = zeros(nu)     # element residual vector
+#     Ke = zeros(nu, nu) # element tangent matrix
 
-    for (cell, state) in zip(CellIterator(dh), states)
-        fill!(Ke, 0)
-        fill!(Qe, 0)
-        eldofs = celldofs(cell)
-        de = d[eldofs]
-        Ke, Qe = assemble_cell!(Ke, Qe, cell, cellvalues, facevalues, grid, material, de, state, load[eldofs])
-        assemble!(assembler, eldofs, Qe, Ke)
-    end
+#     for (cell, state) in zip(CellIterator(dh), states)
+#         fill!(Ke, 0)
+#         fill!(Qe, 0)
+#         eldofs = celldofs(cell)
+#         de = d[eldofs]
+#         Ke, Qe = assemble_cell!(Ke, Qe, cell, cellvalues, facevalues, grid, material, de, state, load[eldofs])
+#         assemble!(assembler, eldofs, Qe, Ke)
+#     end
 
-    return K, Q
-end
+#     return K, Q
+# end
 
 function doassemble_M!(M::SparseMatrixCSC, cellvalues::CellVectorValues{dim}, dh::DofHandler, states) where {dim}
 
@@ -61,7 +61,7 @@ end
 
 function doassemble_dynamic!(s::PlasticStructure)
     
-    s.system.K, s.system.Q = doassemble_K!(s.cellvalues, s.facevalues, s.system.K, s.grid, s.dh, s.material, s.system.d, s.states, s.load)
+    s.system.K, s.system.Q = doassemble_KQ!(s.cellvalues, s.facevalues, s.system.K, s.grid, s.dh, s.material, s.system.d, s.states, s.load)
 
     nqp = getnquadpoints(s.cellvalues)
     update_state_rho!(s.grid, s.system.d, s.states, nqp)

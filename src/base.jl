@@ -47,9 +47,30 @@ end
     return SurfaceFace{dim}(i, ntuple(k -> getnode(surface, faceids[k]), length(faceids)), Vector(surface.normals[i]))
 end
 
-abstract type AbstractPlasticity end
+abstract type AbstractMaterial end
 
-struct J2Plasticity{dim, T, S} <: AbstractPlasticity
+struct Elasticity{dim,T,S} <: AbstractMaterial
+    G::T  # Shear modulus
+    K::T  # Bulk modulus
+    Dᵉ::S # Elastic stiffness tensor
+    ρ₀::T # Initial density
+end
+
+function Elasticity(dim, E, ν, ρ₀)
+    δ(i,j) = i == j ? 1.0 : 0.0 # helper function
+    G = E / 2(1 + ν)
+    K = E / 3(1 - 2ν)
+
+    # Isymdev(i,j,k,l) = 0.5*(δ(i,k)*δ(j,l) + δ(i,l)*δ(j,k)) - 1.0/3.0*δ(i,j)*δ(k,l)
+    # 在二维空间中对应于平面应变问题
+    temp(i,j,k,l) = 2.0G *( 0.5*(δ(i,k)*δ(j,l) + δ(i,l)*δ(j,k)) + ν/(1.0-2.0ν)*δ(i,j)*δ(k,l))
+
+    Dᵉ = SymmetricTensor{4, dim}(temp)
+
+    return Elasticity{dim, Float64,  SymmetricTensor{4, dim}}(G, K, Dᵉ, ρ₀)
+end
+
+struct J2Plasticity{dim, T, S} <: AbstractMaterial
     G::T  # Shear modulus
     K::T  # Bulk modulus
     σ₀::T # Initial yield limit
@@ -66,6 +87,7 @@ function J2Plasticity(dim, E, ν, σ₀, H, ρ₀)
     Isymdev(i,j,k,l) = 0.5*(δ(i,k)*δ(j,l) + δ(i,l)*δ(j,k)) - 1.0/3.0*δ(i,j)*δ(k,l)
     temp(i,j,k,l) = 2.0G *( 0.5*(δ(i,k)*δ(j,l) + δ(i,l)*δ(j,k)) + ν/(1.0-2.0ν)*δ(i,j)*δ(k,l))
     Dᵉ = SymmetricTensor{4, dim}(temp)
+
     return J2Plasticity{dim, Float64,  SymmetricTensor{4, dim}}(G, K, σ₀, H, Dᵉ, ρ₀)
 end
 
@@ -162,7 +184,7 @@ end
 
 mutable struct PlasticStructure
     dim::Int
-    material::AbstractPlasticity
+    material::AbstractMaterial
     grid::Grid
     dh::DofHandler
     dbcs::ConstraintHandler
@@ -177,7 +199,7 @@ mutable struct PlasticStructure
     # constrained_dofs::Vector{Int}
 end
 
-function PlasticStructure(material::AbstractPlasticity, grid::Grid, interpolation, qr, face_qr, dim::Int)
+function PlasticStructure(material::AbstractMaterial, grid::Grid, interpolation, qr, face_qr, dim::Int)
 
     dh, cellvalues, facevalues = create_grid_handlers(grid, interpolation, qr, face_qr, dim) 
     
@@ -209,7 +231,36 @@ function PlasticStructure(material::AbstractPlasticity, grid::Grid, interpolatio
     return PlasticStructure(dim, material, grid, dh, dbcs, cellvalues, facevalues, states, system, load, parameters, NewmarkSolver, true)
 end
 
-# PlasticStructure(material, grid, interpolation, qr, face_qr) = PlasticStructure(material, grid, interpolation, qr, face_qr, interpolation)
+function PlasticStructure(material::AbstractMaterial, grid::Grid{2,Quadrilateral,T}) where T
+
+    
+    qr = QuadratureRule{2, RefCube}(2)
+    face_qr = QuadratureRule{1, RefCube}(1)
+
+    interpolation = Lagrange{2, RefCube, 1}()
+
+    return PlasticStructure(material, grid, interpolation, qr, face_qr, 2)
+end
+
+function PlasticStructure(material::AbstractMaterial, grid::Grid{3,Tetrahedron,T}) where T
+
+    qr      = QuadratureRule{3,RefTetrahedron}(2)
+    face_qr = QuadratureRule{2,RefTetrahedron}(3)
+
+    interpolation = Lagrange{3, RefTetrahedron, 1}()
+
+    return PlasticStructure(material, grid, interpolation, qr, face_qr, 3)
+end
+
+function PlasticStructure(material::AbstractMaterial, grid::Grid{3,Hexahedron,T}) where T
+
+    qr = QuadratureRule{3, RefCube}(2)
+    face_qr = QuadratureRule{2, RefCube}(1)
+
+    interpolation = Lagrange{3, RefCube, 1}()
+
+    return PlasticStructure(material, grid, interpolation, qr, face_qr, 3)
+end
 
 # function Base.copy(s::PlasticStructure)
 

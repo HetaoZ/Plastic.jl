@@ -20,6 +20,7 @@ using PointInPoly
 
 export  
     J2Plasticity,
+    Elasticity,
     vonMises,
     PlasticStructure,
     Surface,

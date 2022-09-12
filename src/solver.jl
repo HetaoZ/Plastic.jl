@@ -55,7 +55,7 @@ function dynamic_solver!(s::PlasticStructure, dt::Real, dynamic_solver::DynamicS
 end
 
 
-"需要在System里添加质量矩阵M。先组装好再传入general_solver。"
+"需要在System里添加质量矩阵M。先组装好再传入core_solver。"
 function core_solver!(s::PlasticStructure, dt::Real, δ::Float64, α::Float64)
 
     d = s.system.d
@@ -71,10 +71,15 @@ function core_solver!(s::PlasticStructure, dt::Real, δ::Float64, α::Float64)
     #     M[i, i] = vM[i]
     # end
 
+
+
     u_bk = copy(u)
     a_bk = copy(a)
 
-    K_eff = M + α*dt^2*K
+    # K_eff = M + α*dt^2*K
+    println("debug K_eff")
+    K_eff =  M
+    # K_eff =  α*dt^2*K
 
     Q_eff = Q - K * (d + dt*u + (0.5-α)*dt^2*a)
 
@@ -97,7 +102,22 @@ function core_solver!(s::PlasticStructure, dt::Real, δ::Float64, α::Float64)
     # println("K = ", K)
     # println("M = ", M)
     # println("Q = ", Q)
-    # println("d = ", d)
+    # 
+
+    println("d = ", d)
+    println("a = ", a)
+    println("load = ",s.load)
+    println("Q = ",s.system.Q)
+    println("Q_eff = ",Q_eff)
+    println("K_eff = ")
+    display(K_eff)
+    println()
+    display(K)
+    println()
+    println("M = ",)
+    display(M)
+    println()
+    println()
 
 end
 
