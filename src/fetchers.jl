@@ -29,13 +29,13 @@ function fetch_speeds(s::PlasticStructure, faces)
     return ntuple(axis->ntuple(i->fetch_node_speed(s, nodeids[i], axis), length(nodeids)), getdim(s.grid))
 end
 
-# function fetch_surface_x(s::PlasticStructure, dim::Int)
+# function getsurface!_x(s::PlasticStructure, dim::Int)
 #     M = length(boundary_faces)
 #     cells_x = ntuple(i -> map(node_id -> s.grid.nodes[node_id].x, s.grid.cells[J[i]].nodes), M)
 #     println("cells_x[1]=",cells_x[1])
 # end
 
-function fetch_surface(s::PlasticStructure)
+function getsurface!(s::PlasticStructure)
     # 根据node的link数无法分辨内外node。
     # 可以根据face的link数分辨内外face，当且仅当link数=1时face在表面上。
     boundary_faces = boundary_matrix_to_faces(s.grid.boundary_matrix, s.grid.cells)
